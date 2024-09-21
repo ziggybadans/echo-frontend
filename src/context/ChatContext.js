@@ -10,6 +10,22 @@ export const ChatProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  useEffect(() => {
+    const saved = localStorage.getItem('chats');
+    if (saved) {
+      const parsedChats = JSON.parse(saved).map(chat => ({
+        ...chat,
+        messages: chat.messages.map(msg => ({
+          ...msg,
+          text: String(msg.text) // Ensure text is string
+        }))
+      }));
+      setChats(parsedChats);
+    } else {
+      setChats([]);
+    }
+  }, []);
+
   const [currentChatId, setCurrentChatId] = useState(() => {
     const saved = localStorage.getItem('currentChatId');
     return saved ? JSON.parse(saved) : null;
@@ -46,7 +62,7 @@ export const ChatProvider = ({ children }) => {
     setChats((prevChats) =>
       prevChats.map((chat) =>
         chat.id === id
-          ? { ...chat, messages: [...chat.messages, message] }
+          ? { ...chat, messages: [...chat.messages, { ...message, text: String(message.text) }] }
           : chat
       )
     );
@@ -65,6 +81,23 @@ export const ChatProvider = ({ children }) => {
     setCurrentChatId(null);
   };
 
+  const updateMessage = (chatId, messageIndex, updatedMessage) => {
+    setChats((prevChats) =>
+      prevChats.map((chat) =>
+        chat.id === chatId
+          ? {
+              ...chat,
+              messages: chat.messages.map((msg, idx) =>
+                idx === messageIndex
+                  ? { ...msg, text: String(updatedMessage.text) } // Ensure text is string
+                  : msg
+              ),
+            }
+          : chat
+      )
+    );
+  };
+
   return (
     <ChatContext.Provider
       value={{
@@ -74,6 +107,7 @@ export const ChatProvider = ({ children }) => {
         addChat,
         updateChat,
         addMessage,
+        updateMessage, // Add updateMessage to context
         deleteChat,
         clearChats,
       }}
