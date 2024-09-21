@@ -1,32 +1,23 @@
-import React, { useState, useEffect } from 'react';
+// src/App.js
+import React from 'react';
 import Home from './components/Home';
 import ChatInterface from './components/ChatInterface';
 import Sidebar from './components/Sidebar';
-import Settings from './components/Settings';
 import { ChatProvider, ChatContext } from './context/ChatContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 function App() {
-  const [theme, setTheme] = useState('light');
-
-  // Handle theme based on user preference
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
-
   return (
-    <ChatProvider>
-      <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-        <Sidebar />
-        <div className="flex-1 flex flex-col">
-          <MainContent />
-          <Settings theme={theme} setTheme={setTheme} />
+    <ThemeProvider>
+      <ChatProvider>
+        <div className="flex h-screen bg-[#eeeeee] dark:bg-[#161618]">
+          <Sidebar />
+          <div className="flex-1 flex flex-col">
+            <MainContent />
+          </div>
         </div>
-      </div>
-    </ChatProvider>
+      </ChatProvider>
+    </ThemeProvider>
   );
 }
 
@@ -34,9 +25,9 @@ function MainContent() {
   const { currentChatId } = React.useContext(ChatContext);
 
   return (
-    <>
+    <div className="flex-1 flex flex-col">
       {currentChatId ? <ChatInterface /> : <Home />}
-    </>
+    </div>
   );
 }
 

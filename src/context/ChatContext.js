@@ -1,3 +1,4 @@
+// src/context/ChatContext.js
 import React, { createContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -49,6 +50,14 @@ export const ChatProvider = ({ children }) => {
     );
   };
 
+  const deleteChat = (id) => {
+    setChats((prevChats) => prevChats.filter((chat) => chat.id !== id));
+    // If the deleted chat was the current one, reset currentChatId
+    if (id === currentChatId) {
+      setCurrentChatId(null);
+    }
+  };
+
   const clearChats = () => {
     setChats([]);
     setCurrentChatId(null);
@@ -63,6 +72,7 @@ export const ChatProvider = ({ children }) => {
         addChat,
         updateChat,
         addMessage,
+        deleteChat,
         clearChats,
       }}
     >

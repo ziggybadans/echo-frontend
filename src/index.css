@@ -15,3 +15,54 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Example: Style for headings */
+h1, h2, h3, h4, h5, h6 {
+  @apply text-lg font-semibold my-2;
+}
+
+/* Style for links */
+a {
+  @apply text-blue-500 hover:underline;
+}
+
+/* Style for blockquotes */
+blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 dark:border-gray-600 dark:text-gray-400;
+}
+
+/* Style for lists */
+ul, ol {
+  @apply list-disc list-inside mb-2;
+}
+
+/* Code styling handled via react-syntax-highlighter */
+@keyframes bounceCustom {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-bounce-custom {
+  animation: bounceCustom 1s infinite;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+code {
+  background-color: black;
+  padding: 2px;
+}
+
+pre div {
+  border-radius: 0.5em;
+}

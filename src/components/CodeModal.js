@@ -1,3 +1,4 @@
+// src/components/CodeModal.js
 import React from 'react';
 import { Dialog } from '@headlessui/react';
 import { ClipboardCopyIcon, XIcon } from '@heroicons/react/solid';
@@ -17,9 +18,9 @@ function CodeModal({ code, setIsCodeModalOpen }) {
       onClose={() => setIsCodeModalOpen(false)}
       className="fixed z-10 inset-0 overflow-y-auto"
     >
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen px-4">
         <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
-        <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl mx-auto p-6 z-20">
+        <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full p-6 z-20">
           <div className="flex justify-between items-center mb-4">
             <Dialog.Title className="text-lg font-bold text-gray-900 dark:text-gray-100">
               Code Snippet
