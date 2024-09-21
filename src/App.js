@@ -1,24 +1,42 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import Home from './components/Home';
+import ChatInterface from './components/ChatInterface';
+import Sidebar from './components/Sidebar';
+import Settings from './components/Settings';
+import { ChatProvider, ChatContext } from './context/ChatContext';
 
 function App() {
+  const [theme, setTheme] = useState('light');
+
+  // Handle theme based on user preference
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ChatProvider>
+      <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          <MainContent />
+          <Settings theme={theme} setTheme={setTheme} />
+        </div>
+      </div>
+    </ChatProvider>
+  );
+}
+
+function MainContent() {
+  const { currentChatId } = React.useContext(ChatContext);
+
+  return (
+    <>
+      {currentChatId ? <ChatInterface /> : <Home />}
+    </>
   );
 }
 
