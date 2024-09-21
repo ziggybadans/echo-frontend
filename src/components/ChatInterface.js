@@ -2,7 +2,6 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import { ChatContext } from '../context/ChatContext';
 import Message from './Message';
-import CodeModal from './CodeModal';
 
 function ChatInterface() {
   const {
@@ -160,9 +159,6 @@ function ChatInterface() {
           </button>
         </div>
       </div>
-      {isCodeModalOpen && (
-        <CodeModal code={codeContent} setIsCodeModalOpen={setIsCodeModalOpen} />
-      )}
     </div>
   );
 }

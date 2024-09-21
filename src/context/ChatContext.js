@@ -35,10 +35,12 @@ export const ChatProvider = ({ children }) => {
   };
 
   const updateChat = (id, updatedChat) => {
+    console.log(`Updating chat with ID: ${id}`, updatedChat); // Add this line
     setChats((prevChats) =>
       prevChats.map((chat) => (chat.id === id ? { ...chat, ...updatedChat } : chat))
     );
   };
+  
 
   const addMessage = (id, message) => {
     setChats((prevChats) =>
