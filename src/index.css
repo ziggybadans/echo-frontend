@@ -59,8 +59,9 @@ ul, ol {
 }
 
 code {
-  background-color: black;
+  background-color: rgba(0, 0, 0, 0.872);
   padding: 2px;
+  color: white
 }
 
 pre div {

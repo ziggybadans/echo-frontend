@@ -1,6 +1,6 @@
 // src/components/CodeAttachmentBubble.js
 import React from 'react';
-import { PencilIcon, TrashIcon } from '@heroicons/react/solid';
+import { EyeIcon, TrashIcon } from '@heroicons/react/solid';
 
 function CodeAttachmentBubble({ attachment, onEdit, onDelete }) {
   return (
@@ -11,18 +11,10 @@ function CodeAttachmentBubble({ attachment, onEdit, onDelete }) {
       <button
         onClick={onEdit}
         className="hover:text-blue-600 dark:hover:text-blue-500 focus:outline-none"
-        title="Edit Attachment"
-        aria-label="Edit Attachment"
+        title="View Attachment"
+        aria-label="View Attachment"
       >
-        <PencilIcon className="h-4 w-4" />
-      </button>
-      <button
-        onClick={onDelete}
-        className="ml-1 hover:text-red-600 dark:hover:text-red-500 focus:outline-none"
-        title="Delete Attachment"
-        aria-label="Delete Attachment"
-      >
-        <TrashIcon className="h-4 w-4" />
+        <EyeIcon className="h-4 w-4" />
       </button>
     </div>
   );

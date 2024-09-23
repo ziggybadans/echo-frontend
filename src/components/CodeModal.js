@@ -28,7 +28,7 @@ function CodeModal({ onClose, onSave, initialData }) {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-11/12 md:w-1/2 lg:w-1/3">
-        <h2 className="text-xl mb-4">{initialData ? 'Edit Code Attachment' : 'Attach Code'}</h2>
+        <h2 className="text-xl mb-4 dark:text-white">{initialData ? 'Edit Code Attachment' : 'Attach Code'}</h2>
         <textarea
           className="w-full p-2 border rounded-lg resize-none dark:bg-gray-700 dark:text-white mb-2"
           rows="6"
@@ -53,7 +53,7 @@ function CodeModal({ onClose, onSave, initialData }) {
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className="mr-2 px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500"
+            className="mr-2 px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 dark:text-white"
           >
             Cancel
           </button>

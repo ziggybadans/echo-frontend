@@ -12,6 +12,7 @@ export const renderCodeBubble = (fileName, notes, codeContent) => {
       >
         ${fileName || 'Untitled'}
       </span>
+      \u200B
     `;
   };
   

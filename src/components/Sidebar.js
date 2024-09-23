@@ -7,6 +7,7 @@ import ChatItem from "./ChatItem";
 import DarkModeToggle from "./DarkModeToggle";
 import ConfirmModal from "./ConfirmModal";
 import ModelList from "./ModelList"; // Import the ModelList component
+import Favicon from "../assets/favicon.png"
 
 function Sidebar() {
   const {
@@ -76,9 +77,10 @@ function Sidebar() {
     <div className="w-72 bg-gray-100 dark:bg-zinc-900 border-r dark:border-gray-700 p-4 flex flex-col">
       {/* Chatbot Name "Echo" at the top */}
       <div
-        className="mb-6 text-2xl font-bold text-gray-800 dark:text-gray-200 cursor-pointer"
+        className="mb-6 text-2xl font-bold text-gray-800 dark:text-gray-200 cursor-pointer flex flex-row align-middle"
         onClick={handleGoHome}
       >
+      <img src={Favicon} alt="Logo of Echo" width={"32"} className="mr-2 mt-[2px]" />
         Echo
       </div>
 

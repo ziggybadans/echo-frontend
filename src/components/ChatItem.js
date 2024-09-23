@@ -78,7 +78,7 @@ function ChatItem({ chat }) {
           <div className="flex items-center space-x-2">
             <button
               onClick={handleEditClick}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-400"
               title="Rename Chat"
               aria-label="Rename Chat"
             >

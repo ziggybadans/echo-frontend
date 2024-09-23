@@ -1,5 +1,5 @@
 // src/components/ChatInterface.js
-import React, { useState, useContext, useRef, useEffect } from "react";
+import React, { useState, useContext, useRef, useEffect, useCallback } from "react";
 import { ChatContext } from "../context/ChatContext";
 import Message from "./Message";
 import CodeModal from "./CodeModal";
@@ -22,7 +22,6 @@ function ChatInterface() {
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [currentEditingCode, setCurrentEditingCode] = useState(null);
   const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false);
-  const [codeAttachments, setCodeAttachments] = useState([]);
 
   const addCodeAttachment = ({ codeContent, fileName, notes }) => {
     const escapedCode = escapeHtml(codeContent);
@@ -32,10 +31,10 @@ function ChatInterface() {
     setMessage((prev) => prev + codeTag);
   };
 
-  const handleAttachCode = (codeSegment) => {
+  const handleAttachCode = useCallback((codeSegment = null) => {
     setCurrentEditingCode(codeSegment);
     setIsCodeModalOpen(true);
-  };
+  }, []);
 
   const handleCodeSave = (updatedCode) => {
     if (currentEditingCode) {
@@ -62,7 +61,7 @@ function ChatInterface() {
     setCurrentEditingCode(null);
   };
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
     if (!message.trim() || !currentChatId || !selectedModelId) return;
 
     // Retrieve the system prompt from the current chat
@@ -120,18 +119,29 @@ function ChatInterface() {
       // Remove typing indicator
       setIsTyping(false);
     }
-  };
+  });
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    },
+    [handleSend]
+  );
+
+  const handleEditorKeyDown = useCallback((e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  };
+  }, [handleSend]);
 
-  const scrollToBottom = () => {
+
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   if (!currentChat) {
     return (
@@ -203,6 +213,7 @@ function ChatInterface() {
               value={message}
               onChange={setMessage}
               onAttachCode={handleAttachCode}
+              onKeyDown={handleEditorKeyDown}
             />
           </div>
           <div className="flex flex-col items-end pl-4">

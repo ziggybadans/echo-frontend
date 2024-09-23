@@ -1,5 +1,5 @@
 // src/components/InlineCodeEditor.js
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import CodeAttachmentBubble from './CodeAttachmentBubble';
 import { renderCodeBubble } from '../utils/renderCodeBubble';
 
@@ -21,26 +21,34 @@ function InlineCodeEditor({ value, onChange, onAttachCode }) {
     });
   };
 
-  const handleInput = () => {
+  const handleInput = useCallback(() => {
     if (editorRef.current) {
       const content = editorRef.current.innerHTML;
       const plainText = content.replace(/<span class="code-bubble"[^>]*>[^<]*<\/span>/g, (match) => {
         const fileName = match.match(/data-filename="([^"]*)"/)?.[1];
         const notes = match.match(/data-notes="([^"]*)"/)?.[1];
-        const codeContentEncoded = match.match(/data-codecontent="([^"]*)"/)?.[1];
-        const codeContent = codeContentEncoded ? decodeURIComponent(codeContentEncoded) : '';
+        const codeContentEscaped = match.match(/data-codecontent="([^"]*)"/)?.[1];
+        // Unescape the codeContent
+        const codeContent = codeContentEscaped ? decodeURIComponent(codeContentEscaped) : '';
         return `<code fileName="${fileName}" notes="${notes}">${codeContent}</code>`;
       });
       onChange(plainText);
     }
-  };
+  }, [onChange]);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
-      e.preventDefault();
-      document.execCommand('insertLineBreak');
+      if (e.shiftKey) {
+        // Allow Shift+Enter to insert a newline
+        // Let the event propagate naturally
+      } else {
+        // Prevent default behavior and emit a custom event or handle sending the message
+        // Here, you might want to trigger the send action if needed
+        // For InlineCodeEditor, we'll allow the parent to handle message sending
+        // by not preventing default here
+      }
     }
-  };
+  }, []);
 
   const handlePaste = (e) => {
     e.preventDefault();
@@ -48,15 +56,15 @@ function InlineCodeEditor({ value, onChange, onAttachCode }) {
     document.execCommand('insertText', false, text);
   };
 
-  const handleBubbleClick = (e) => {
+  const handleBubbleClick = useCallback((e) => {
     if (e.target.classList.contains('code-bubble')) {
       const fileName = e.target.getAttribute('data-filename');
       const notes = e.target.getAttribute('data-notes');
-      const codeContentEncoded = e.target.getAttribute('data-codecontent');
-      const codeContent = codeContentEncoded ? decodeURIComponent(codeContentEncoded) : '';
+      const codeContentEscaped = e.target.getAttribute('data-codecontent');
+      const codeContent = codeContentEscaped ? decodeURIComponent(codeContentEscaped) : '';
       onAttachCode({ fileName, notes, codeContent });
     }
-  };
+  }, [onAttachCode]);
 
   return (
     <div className="relative border rounded-lg p-2 bg-white dark:bg-[#18181b] text-black dark:text-white">
@@ -68,7 +76,9 @@ function InlineCodeEditor({ value, onChange, onAttachCode }) {
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
         onClick={handleBubbleClick}
-        // Remove value prop to make it uncontrolled
+        role="textbox"
+        aria-multiline="true"
+        aria-label="Code Editor"
       />
     </div>
   );
