@@ -84,6 +84,7 @@ function ChatInterface() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          session_id: currentChatId,
           text: fullMessage,
           model_id: selectedModelId, // Ensure this is correctly set
         }),
