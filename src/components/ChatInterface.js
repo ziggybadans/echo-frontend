@@ -1,11 +1,18 @@
 // src/components/ChatInterface.js
 
-import React, { useState, useContext, useRef, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useContext,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 import { ChatContext } from "../context/ChatContext";
 import Message from "./Message";
 import CodeModal from "./CodeModal";
 import InlineCodeEditor from "./InlineCodeEditor";
 import { escapeHtml } from "../utils/escapeHtml";
+import { unescapeHtml } from "../utils/unescapeHtml"; // Import unescapeHtml
 
 /**
  * Component representing the chat interface where users can send messages and receive responses.
@@ -39,11 +46,15 @@ function ChatInterface() {
    * @param {string} [params.fileName='untitled'] - The name of the code file.
    * @param {string} [params.notes=''] - Optional notes or comments.
    */
-  const addCodeAttachment = ({ codeContent, fileName = "untitled", notes = "" }) => {
-    const escapedCode = escapeHtml(codeContent);
+  const addCodeAttachment = ({
+    codeContent,
+    fileName = "untitled",
+    notes = "",
+  }) => {
     const escapedFileName = escapeHtml(fileName);
     const escapedNotes = escapeHtml(notes);
-    const codeTag = `<code fileName="${escapedFileName}" notes="${escapedNotes}">${escapedCode}</code>`;
+    // Do not escape codeContent to preserve code readability
+    const codeTag = `<code fileName="${escapedFileName}" notes="${escapedNotes}">${codeContent}</code>`;
     setMessage((prev) => prev + codeTag);
   };
 
@@ -65,30 +76,36 @@ function ChatInterface() {
    * @param {string} updatedCode.fileName - The updated file name.
    * @param {string} updatedCode.notes - The updated notes.
    */
-  const handleCodeSave = useCallback((updatedCode) => {
-    if (currentEditingCode) {
-      // Update existing code
-      const escapedCode = escapeHtml(updatedCode.codeContent);
-      const escapedFileName = escapeHtml(updatedCode.fileName || "untitled");
-      const escapedNotes = escapeHtml(updatedCode.notes || "");
+  const handleCodeSave = useCallback(
+    (updatedCode) => {
+      if (currentEditingCode) {
+        // Update existing code
+        const escapedFileName = escapeHtml(updatedCode.fileName || "untitled");
+        const escapedNotes = escapeHtml(updatedCode.notes || "");
 
-      // Use a more robust selector if possible to prevent regex issues
-      const regex = new RegExp(
-        `<code\\s+fileName="${currentEditingCode.fileName}"\\s+notes="${currentEditingCode.notes}">([\\s\\S]*?)<\\/code>`
-      );
+        // Use a more robust selector if possible to prevent regex issues
+        const regex = new RegExp(
+          `<code\\s+fileName="${escapeHtml(
+            currentEditingCode.fileName
+          )}"\\s+notes="${escapeHtml(
+            currentEditingCode.notes
+          )}">([\\s\\S]*?)<\\/code>`
+        );
 
-      const updatedMessage = message.replace(
-        regex,
-        `<code fileName="${escapedFileName}" notes="${escapedNotes}">${escapedCode}</code>`
-      );
-      setMessage(updatedMessage);
-    } else {
-      // Add new code
-      addCodeAttachment(updatedCode);
-    }
-    setIsCodeModalOpen(false);
-    setCurrentEditingCode(null);
-  }, [currentEditingCode, message]);
+        const updatedMessage = message.replace(
+          regex,
+          `<code fileName="${escapedFileName}" notes="${escapedNotes}">${updatedCode.codeContent}</code>`
+        );
+        setMessage(updatedMessage);
+      } else {
+        // Add new code
+        addCodeAttachment(updatedCode);
+      }
+      setIsCodeModalOpen(false);
+      setCurrentEditingCode(null);
+    },
+    [currentEditingCode, message, escapeHtml, addCodeAttachment]
+  );
 
   /**
    * Sends the user's message to the backend and handles the response.
@@ -102,7 +119,7 @@ function ChatInterface() {
     // Combine the system prompt with the user message
     const fullMessage = systemPrompt ? `${systemPrompt}\n${message}` : message;
 
-    const userMessage = { sender: "user", text: message };
+    const userMessage = { sender: "user", text: fullMessage };
     addMessage(currentChatId, userMessage);
     setMessage("");
     scrollToBottom();
@@ -111,14 +128,17 @@ function ChatInterface() {
     setIsTyping(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: fullMessage,
-          model_id: selectedModelId,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/api/chat`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: fullMessage, // Send the full message with <code> tags intact
+            model_id: selectedModelId,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -158,8 +178,18 @@ function ChatInterface() {
    *
    * @param {object} e - The event object.
    */
-  const handleKeyDown = useCallback((e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    },
+    [handleSend]
+  );
+
+  const handleEditorKeyDown = useCallback((e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -177,10 +207,13 @@ function ChatInterface() {
    *
    * @param {object} e - The event object.
    */
-  const handleSystemPromptChange = useCallback((e) => {
-    const newPrompt = e.target.value;
-    updateChat(currentChatId, { systemPrompt: newPrompt });
-  }, [updateChat, currentChatId]);
+  const handleSystemPromptChange = useCallback(
+    (e) => {
+      const newPrompt = e.target.value;
+      updateChat(currentChatId, { systemPrompt: newPrompt });
+    },
+    [updateChat, currentChatId]
+  );
 
   /**
    * Toggles the visibility of the system prompt textarea.
@@ -254,6 +287,7 @@ function ChatInterface() {
               value={message}
               onChange={setMessage}
               onAttachCode={handleAttachCode}
+              onKeyDown={handleEditorKeyDown} // Pass the keydown handler as a prop
             />
           </div>
           <div className="flex flex-col items-end pl-4">
