@@ -1,5 +1,6 @@
 // src/components/Sidebar.js
-import React, { useContext, useState } from "react";
+
+import React, { useContext, useState, useCallback } from "react";
 import { ChatContext } from "../context/ChatContext";
 import { PlusIcon, TrashIcon } from "@heroicons/react/solid";
 import { ThemeContext } from "../context/ThemeContext";
@@ -8,6 +9,11 @@ import DarkModeToggle from "./DarkModeToggle";
 import ConfirmModal from "./ConfirmModal";
 import ModelList from "./ModelList"; // Import the ModelList component
 
+/**
+ * Sidebar component containing the list of past chats, model management, and theme toggling.
+ *
+ * @returns {JSX.Element} The Sidebar component.
+ */
 function Sidebar() {
   const {
     chats,
@@ -26,12 +32,15 @@ function Sidebar() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false); // For deleting all chats
 
-  const handleNewChat = async () => {
+  /**
+   * Handles initiating a new chat by resetting the current session.
+   */
+  const handleNewChat = useCallback(async () => {
     setIsResetting(true);
     setError(null);
 
     try {
-      const response = await fetch("http://localhost:8000/api/reset", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/reset`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -53,31 +62,45 @@ function Sidebar() {
     } finally {
       setIsResetting(false);
     }
-  };
+  }, [addChat, setCurrentChatId]);
 
-  const handleGoHome = () => {
+  /**
+   * Navigates back to the home screen by deselecting the current chat.
+   */
+  const handleGoHome = useCallback(() => {
     setCurrentChatId(null);
-  };
+  }, [setCurrentChatId]);
 
-  const handleDeleteAllChats = () => {
+  /**
+   * Opens the confirmation modal for deleting all chats.
+   */
+  const handleDeleteAllChats = useCallback(() => {
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const confirmDeleteAllChats = () => {
+  /**
+   * Confirms the deletion of all chats.
+   */
+  const confirmDeleteAllChats = useCallback(() => {
     clearChats();
     setIsModalOpen(false);
-  };
+  }, [clearChats]);
 
-  const cancelDeleteAllChats = () => {
+  /**
+   * Cancels the deletion of all chats.
+   */
+  const cancelDeleteAllChats = useCallback(() => {
     setIsModalOpen(false);
-  };
+  }, []);
 
   return (
     <div className="w-72 bg-gray-100 dark:bg-zinc-900 border-r dark:border-gray-700 p-4 flex flex-col">
       {/* Chatbot Name "Echo" at the top */}
       <div
-        className="mb-6 text-2xl font-bold text-gray-800 dark:text-gray-200 cursor-pointer"
+        className="mb-6 text-2xl font-bold text-gray-800 dark:text-gray-200 cursor-pointer truncate"
         onClick={handleGoHome}
+        title="Go to Home"
+        aria-label="Go to Home"
       >
         Echo
       </div>
@@ -88,10 +111,11 @@ function Sidebar() {
         </h2>
         <button
           onClick={handleNewChat}
-          className={`p-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center justify-center ${
+          className={`p-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center justify-center focus:outline-none ${
             isResetting ? "opacity-50 cursor-not-allowed" : ""
           }`}
           title="Start New Chat"
+          aria-label="Start New Chat"
           disabled={isResetting}
         >
           {isResetting ? "Resetting..." : <PlusIcon className="h-5 w-5" />}
@@ -113,11 +137,12 @@ function Sidebar() {
       {chats.length > 0 && (
         <button
           onClick={handleDeleteAllChats}
-          className="mt-4 p-2 bg-red-500 text-white rounded hover:bg-red-600 flex items-center justify-center"
+          className="mt-4 p-2 bg-red-500 text-white rounded hover:bg-red-600 flex items-center justify-center focus:outline-none"
           title="Delete All Chats"
+          aria-label="Delete All Chats"
         >
-          <TrashIcon className="h-5 w-5" />
-          <span className="ml-2">Delete All</span>
+          <TrashIcon className="h-5 w-5 mr-2" />
+          Delete All
         </button>
       )}
 

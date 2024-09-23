@@ -1,55 +1,96 @@
 // src/components/ChatItem.js
-import React, { useContext, useState } from 'react';
-import { TrashIcon, PencilIcon, CheckIcon, XIcon } from '@heroicons/react/solid';
-import { ChatContext } from '../context/ChatContext';
 
+import React, { useContext, useState, useCallback } from "react";
+import {
+  TrashIcon,
+  PencilIcon,
+  CheckIcon,
+  XIcon,
+} from "@heroicons/react/solid";
+import { ChatContext } from "../context/ChatContext";
+
+/**
+ * Component representing a single chat item in the sidebar.
+ *
+ * @param {object} props - Component props.
+ * @param {object} props.chat - The chat object containing chat details.
+ * @returns {JSX.Element} The ChatItem component.
+ */
 function ChatItem({ chat }) {
-  const { currentChatId, setCurrentChatId, deleteChat, updateChat } = useContext(ChatContext);
+  const { currentChatId, setCurrentChatId, deleteChat, updateChat } =
+    useContext(ChatContext);
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(chat.name);
   const [renameError, setRenameError] = useState(null);
 
-  const handleSelectChat = () => {
+  /**
+   * Handles the selection of a chat.
+   */
+  const handleSelectChat = useCallback(() => {
     setCurrentChatId(chat.id);
     setIsEditing(false); // Exit edit mode if selecting the chat
-  };
+  }, [setCurrentChatId, chat.id]);
 
-  const handleDeleteChat = (e) => {
-    e.stopPropagation(); // Prevent triggering the chat selection
-    deleteChat(chat.id);
-  };
+  /**
+   * Handles the deletion of a chat.
+   *
+   * @param {object} e - The event object.
+   */
+  const handleDeleteChat = useCallback(
+    (e) => {
+      e.stopPropagation(); // Prevent triggering the chat selection
+      deleteChat(chat.id);
+    },
+    [deleteChat, chat.id]
+  );
 
-  const handleEditClick = (e) => {
+  /**
+   * Handles entering the edit mode for renaming a chat.
+   *
+   * @param {object} e - The event object.
+   */
+  const handleEditClick = useCallback((e) => {
     e.stopPropagation(); // Prevent triggering the chat selection
     setIsEditing(true);
-  };
+  }, []);
 
-  const handleRename = (e) => {
-    e.preventDefault();
-    if (newName.trim() === '') {
-      setRenameError('Chat name cannot be empty.');
-      return;
-    }
-    console.log(`Renaming chat ID: ${chat.id} to "${newName.trim()}"`); // Debug log
-    updateChat(chat.id, { name: newName.trim() });
-    setIsEditing(false);
-    setRenameError(null);
-  };
+  /**
+   * Handles renaming the chat upon form submission.
+   *
+   * @param {object} e - The event object.
+   */
+  const handleRename = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (newName.trim() === "") {
+        setRenameError("Chat name cannot be empty.");
+        return;
+      }
+      updateChat(chat.id, { name: newName.trim() });
+      setIsEditing(false);
+      setRenameError(null);
+    },
+    [newName, updateChat, chat.id]
+  );
 
-  const handleCancelRename = () => {
+  /**
+   * Cancels the rename operation and resets the input field.
+   */
+  const handleCancelRename = useCallback(() => {
     setNewName(chat.name);
     setIsEditing(false);
     setRenameError(null);
-  };
+  }, [chat.name]);
 
   return (
     <div
       className={`mb-2 cursor-pointer p-2 rounded ${
         chat.id === currentChatId
-          ? 'bg-blue-100 dark:bg-blue-900'
-          : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+          ? "bg-blue-100 dark:bg-blue-900"
+          : "hover:bg-gray-100 dark:hover:bg-gray-700"
       }`}
       onClick={!isEditing ? handleSelectChat : undefined} // Conditional onClick
+      aria-current={chat.id === currentChatId ? "page" : undefined}
     >
       {isEditing ? (
         <form onSubmit={handleRename} className="flex items-center space-x-2">
@@ -60,7 +101,11 @@ function ChatItem({ chat }) {
             className="flex-1 min-w-0 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring focus:border-blue-300 dark:bg-zinc-800 dark:text-white"
             autoFocus
           />
-          <button type="submit" className="text-green-500 hover:text-green-700" title="Save">
+          <button
+            type="submit"
+            className="text-green-500 hover:text-green-700"
+            title="Save"
+          >
             <CheckIcon className="h-5 w-5" />
           </button>
           <button
@@ -74,7 +119,9 @@ function ChatItem({ chat }) {
         </form>
       ) : (
         <div className="flex justify-between items-center">
-          <span className="text-black dark:text-white">{chat.name}</span>
+          <span className="text-black dark:text-white" title={chat.name}>
+            {chat.name}
+          </span>
           <div className="flex items-center space-x-2">
             <button
               onClick={handleEditClick}
@@ -96,7 +143,7 @@ function ChatItem({ chat }) {
         </div>
       )}
       {renameError && (
-        <div className="text-red-500 text-sm mt-1">
+        <div className="text-red-500 text-sm mt-1" role="alert">
           {renameError}
         </div>
       )}

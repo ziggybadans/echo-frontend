@@ -1,11 +1,24 @@
 // src/components/CodeAttachmentBubble.js
+
 import React from 'react';
 import { PencilIcon, TrashIcon } from '@heroicons/react/solid';
 
+/**
+ * Component representing a code attachment bubble with edit and delete options.
+ *
+ * @param {object} props - Component props.
+ * @param {object} props.attachment - The code attachment details.
+ * @param {function} props.onEdit - Function to call when editing the attachment.
+ * @param {function} props.onDelete - Function to call when deleting the attachment.
+ * @returns {JSX.Element} The CodeAttachmentBubble component.
+ */
 function CodeAttachmentBubble({ attachment, onEdit, onDelete }) {
   return (
     <div className="inline-flex items-center bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full mr-2 mb-2">
-      <span className="mr-2 text-xs md:text-sm truncate" title={attachment.fileName}>
+      <span
+        className="mr-2 text-xs md:text-sm truncate"
+        title={attachment.fileName || 'Untitled'}
+      >
         {attachment.fileName || 'Untitled'}
       </span>
       <button
