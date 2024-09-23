@@ -1,6 +1,7 @@
 // src/components/InlineCodeEditor.js
 import React, { useRef, useEffect } from 'react';
 import CodeAttachmentBubble from './CodeAttachmentBubble';
+import { renderCodeBubble } from '../utils/renderCodeBubble';
 
 function InlineCodeEditor({ value, onChange, onAttachCode }) {
   const editorRef = useRef(null);
@@ -15,7 +16,7 @@ function InlineCodeEditor({ value, onChange, onAttachCode }) {
     return content.replace(/<code([^>]*)>([^<]*)<\/code>/g, (match, attributes, code) => {
       const fileName = attributes.match(/fileName="([^"]*)"/)?.[1] || 'Untitled';
       const notes = attributes.match(/notes="([^"]*)"/)?.[1] || '';
-      return `<span class="code-bubble" data-filename="${fileName}" data-notes="${notes}">${fileName}</span>`;
+      return renderCodeBubble(fileName, notes);
     });
   };
 
@@ -51,6 +52,7 @@ function InlineCodeEditor({ value, onChange, onAttachCode }) {
       onAttachCode({ fileName, notes, content: '' });
     }
   };
+  
 
   return (
     <div className="relative border rounded-lg p-2 bg-white dark:bg-gray-800 text-black dark:text-white">
@@ -64,21 +66,6 @@ function InlineCodeEditor({ value, onChange, onAttachCode }) {
         onClick={handleBubbleClick}
         // Remove value prop to make it uncontrolled
       />
-      <style jsx>{`
-        .code-bubble {
-          display: inline-block;
-          background-color: #e0f2fe;
-          color: #0369a1;
-          padding: 2px 6px;
-          border-radius: 4px;
-          margin: 0 2px;
-          font-size: 0.9em;
-          cursor: pointer;
-        }
-        .code-bubble:hover {
-          background-color: #bae6fd;
-        }
-      `}</style>
     </div>
   );
 }
