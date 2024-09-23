@@ -7,130 +7,49 @@ import InlineCodeEditor from "./InlineCodeEditor";
 import { escapeHtml } from "../utils/escapeHtml";
 
 function ChatInterface() {
-  const { chats, currentChatId, addMessage, updateChat } = useContext(ChatContext);
+  const { 
+    chats, 
+    currentChatId, 
+    addMessage, 
+    updateChat, 
+    selectedModelId,
+    models 
+  } = useContext(ChatContext);
   const currentChat = chats.find((chat) => chat.id === currentChatId);
   const [message, setMessage] = useState("");
-  const [codeAttachments, setCodeAttachments] = useState([]);
-  const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
-  const [currentAttachmentIndex, setCurrentAttachmentIndex] = useState(null);
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [currentEditingCode, setCurrentEditingCode] = useState(null);
 
-  const addCodeAttachment = ({ codeContent, fileName, notes }) => {
-    const escapedCode = escapeHtml(codeContent);
-    const escapedFileName = escapeHtml(fileName || "untitled");
-    const escapedNotes = escapeHtml(notes || "");
-    const codeTag = `<code fileName="${escapedFileName}" notes="${escapedNotes}">${escapedCode}</code>`;
-    setMessage((prev) => prev + codeTag);
-  };
-
-  const handleAttachCode = (codeSegment) => {
-    setCurrentEditingCode(codeSegment);
-    setIsCodeModalOpen(true);
-  };
-
-  const handleCodeSave = (updatedCode) => {
-    if (currentEditingCode) {
-      // Update existing code
-      const escapedCode = escapeHtml(updatedCode.codeContent);
-      const escapedFileName = escapeHtml(updatedCode.fileName || "untitled");
-      const escapedNotes = escapeHtml(updatedCode.notes || "");
-
-      // Improved regex to handle multi-line and special characters
-      const regex = new RegExp(`<code\\s+fileName="${currentEditingCode.fileName}"\\s+notes="${currentEditingCode.notes}">([\\s\\S]*?)<\\/code>`);
-      
-      const updatedMessage = message.replace(regex, 
-        `<code fileName="${escapedFileName}" notes="${escapedNotes}">${escapedCode}</code>`
-      );
-      setMessage(updatedMessage);
-    } else {
-      // Add new code
-      addCodeAttachment(updatedCode);
-    }
-    setIsCodeModalOpen(false);
-    setCurrentEditingCode(null);
-  };
-
-  const updateCodeAttachment = (index, updatedAttachment) => {
-    setCodeAttachments((prev) =>
-      prev.map((attachment, i) => (i === index ? updatedAttachment : attachment))
-    );
-    // Also update the message text to reflect changes
-    const { codeContent, fileName, notes } = updatedAttachment;
-    const updatedCodeTag = `<code fileName="${escapeHtml(fileName || "untitled")}" notes="${escapeHtml(notes || "")}">\n${escapeHtml(codeContent)}\n</code>`;
-    setMessage((prev) => {
-      const regex = /<code\s+fileName="[^"]*"\s+notes="[^"]*">\n[\s\S]*?\n<\/code>/;
-      return prev.replace(regex, updatedCodeTag);
-    });
-  };
-
-  const deleteCodeAttachment = (index) => {
-    setCodeAttachments((prev) => prev.filter((_, i) => i !== index));
-    // Also remove the code tag from the message text
-    setMessage((prev) => prev.replace(/<code\s+fileName="[^"]*"\s+notes="[^"]*">\n[\s\S]*?\n<\/code>/, '').trim());
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [currentChat?.messages, isTyping]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const formatConversation = (messages, systemPrompt, maxMessages = 10) => {
-    let formatted = systemPrompt ? `${systemPrompt}\n\n` : "";
-    const recentMessages = messages.slice(-maxMessages);
-    recentMessages.forEach((msg) => {
-      if (msg.sender === "user") {
-        formatted += `User: ${String(msg.text)}\n`;
-      } else if (msg.sender === "bot") {
-        formatted += `Bot: ${String(msg.text)}\n`;
-      }
-    });
-    return formatted;
-  };
-
   const handleSend = async () => {
-    if (!message.trim() || !currentChatId) return;
-  
+    if (!message.trim() || !currentChatId || !selectedModelId) return;
+
     const userMessage = { sender: 'user', text: message };
     addMessage(currentChatId, userMessage);
     setMessage('');
-    setCodeAttachments([]);
     scrollToBottom();
-  
+
     // Set typing indicator
     setIsTyping(true);
-  
-    // Aggregate all messages for context
-    const allMessages = currentChat.messages.concat(userMessage);
-    const formattedConversation = formatConversation(
-      allMessages,
-      currentChat.systemPrompt
-    );
 
-    console.log("Formatted Conversation:", formattedConversation);
-
-    // Send the aggregated conversation to the backend
     try {
       const response = await fetch("http://localhost:8000/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: formattedConversation }),
+        body: JSON.stringify({
+          text: message,
+          model_id: selectedModelId, // Ensure this is correctly set
+        }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to get response from the server.");
+      }
+
       const data = await response.json();
       const responseText = data.response;
-
-      // Check if the response contains code blocks
-      const codeMatch = responseText.match(/```(?:\w+\n)?([\s\S]*?)```/);
-      if (codeMatch) {
-        // Uncomment if you want to handle code blocks
-        // setCodeContent(codeMatch[1]);
-        // setIsCodeModalOpen(true);
-      }
 
       const botMessage = { sender: "bot", text: responseText };
       addMessage(currentChatId, botMessage);
@@ -156,13 +75,8 @@ function ChatInterface() {
     }
   };
 
-  const handleSystemPromptChange = (e) => {
-    const newPrompt = e.target.value;
-    updateChat(currentChatId, { systemPrompt: newPrompt });
-  };
-
-  const toggleSystemPrompt = () => {
-    setIsSystemPromptOpen(!isSystemPromptOpen);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   if (!currentChat) {
@@ -174,6 +88,9 @@ function ChatInterface() {
   return (
     <div className="flex flex-col h-screen">
       <div className="flex-1 p-32 pt-8 pb-8 overflow-y-auto bg-[#eeeeee] dark:bg-[#161618]">
+        {/* Removed Model Selector Dropdown */}
+        
+        {/* Chat Messages */}
         {currentChat.messages.map((msg, index) => (
           <Message
             key={index}
@@ -201,28 +118,13 @@ function ChatInterface() {
         id="message_area"
         className="p-4 border-t dark:border-gray-700 bg-white dark:bg-[#161618]"
       >
-        <button
-          onClick={toggleSystemPrompt}
-          className="mb-2 text-sm text-blue-500 hover:underline focus:outline-none"
-        >
-          {isSystemPromptOpen ? "Hide System Prompt" : "Show System Prompt"}
-        </button>
-        {isSystemPromptOpen && (
-          <textarea
-            className="w-full p-2 border rounded-lg resize-none bg-gray-100 dark:bg-gray-800 dark:text-gray-200 mb-2"
-            rows="3"
-            placeholder="Enter system prompt..."
-            value={currentChat.systemPrompt}
-            onChange={handleSystemPromptChange}
-          />
-        )}
         <div className="flex flex-row">
           <div className="flex-grow">
-          <InlineCodeEditor
-            value={message}
-            onChange={setMessage}
-            onAttachCode={handleAttachCode}
-          />
+            <InlineCodeEditor
+              value={message}
+              onChange={setMessage}
+              onAttachCode={() => { /* Handle code attachments */ }}
+            />
           </div>
           <div className="flex flex-col items-end pl-4">
             <button
@@ -246,7 +148,11 @@ function ChatInterface() {
             setIsCodeModalOpen(false);
             setCurrentEditingCode(null);
           }}
-          onSave={handleCodeSave}
+          onSave={(updatedCode) => {
+            // Handle saving code attachments
+            setIsCodeModalOpen(false);
+            setCurrentEditingCode(null);
+          }}
           initialData={currentEditingCode}
         />
       )}

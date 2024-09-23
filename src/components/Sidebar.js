@@ -1,11 +1,12 @@
 // src/components/Sidebar.js
 import React, { useContext, useState } from "react";
 import { ChatContext } from "../context/ChatContext";
-import { PlusIcon, TrashIcon } from "@heroicons/react/solid"; // Import TrashIcon
+import { PlusIcon, TrashIcon } from "@heroicons/react/solid";
 import { ThemeContext } from "../context/ThemeContext";
 import ChatItem from "./ChatItem";
 import DarkModeToggle from "./DarkModeToggle";
 import ConfirmModal from "./ConfirmModal";
+import ModelList from "./ModelList"; // Import the ModelList component
 
 function Sidebar() {
   const {
@@ -15,14 +16,15 @@ function Sidebar() {
     addChat,
     deleteChat,
     updateChat,
-    clearChats, // Destructure clearChats
+    clearChats,
+    models,
   } = useContext(ChatContext);
 
   const { theme, toggleTheme } = useContext(ThemeContext);
 
   const [isResetting, setIsResetting] = useState(false);
-  const [isDeletingAll, setIsDeletingAll] = useState(false); // New state for deleting
   const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false); // For deleting all chats
 
   const handleNewChat = async () => {
     setIsResetting(true);
@@ -41,10 +43,10 @@ function Sidebar() {
       }
 
       const data = await response.json();
-      console.log(data.status); // Optional: Handle the response as needed
+      console.log(data.status);
 
       addChat("New Chat");
-      setCurrentChatId(null); // Optionally set to the new chat's ID if returned
+      setCurrentChatId(null);
     } catch (err) {
       console.error("Error resetting chat:", err);
       setError("Unable to reset the chat. Please try again.");
@@ -56,8 +58,6 @@ function Sidebar() {
   const handleGoHome = () => {
     setCurrentChatId(null);
   };
-
-  const [isModalOpen, setIsModalOpen] = useState(false); // New state
 
   const handleDeleteAllChats = () => {
     setIsModalOpen(true);
@@ -130,6 +130,9 @@ function Sidebar() {
           onCancel={cancelDeleteAllChats}
         />
       )}
+
+      {/* Model List */}
+      <ModelList />
 
       {/* Dark Mode Toggle at the bottom */}
       <div className="mt-4">
