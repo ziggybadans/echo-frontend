@@ -2,28 +2,49 @@
 import React, { useState, useContext, useRef, useEffect } from "react";
 import { ChatContext } from "../context/ChatContext";
 import Message from "./Message";
-import CodeModal from "./CodeModal"; // New Component
-import CodeAttachmentBubble from "./CodeAttachmentBubble"; // Import the bubble component
-import { escapeHtml } from "../utils/escapeHtml"; // Import the utility function
+import CodeModal from "./CodeModal";
+import InlineCodeEditor from "./InlineCodeEditor";
+import { escapeHtml } from "../utils/escapeHtml";
 
 function ChatInterface() {
   const { chats, currentChatId, addMessage, updateChat } = useContext(ChatContext);
   const currentChat = chats.find((chat) => chat.id === currentChatId);
   const [message, setMessage] = useState("");
-  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [codeAttachments, setCodeAttachments] = useState([]);
   const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const [currentAttachmentIndex, setCurrentAttachmentIndex] = useState(null);
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+  const [currentEditingCode, setCurrentEditingCode] = useState(null);
 
   const addCodeAttachment = ({ codeContent, fileName, notes }) => {
     const escapedCode = escapeHtml(codeContent);
     const escapedFileName = escapeHtml(fileName || "untitled");
     const escapedNotes = escapeHtml(notes || "");
-    const codeTag = `<code fileName="${escapedFileName}" notes="${escapedNotes}">\n${escapedCode}\n</code>`;
-    setMessage((prev) => prev + "\n" + codeTag);
-    setCodeAttachments((prev) => [...prev, { codeContent, fileName, notes }]);
+    const codeTag = `<code fileName="${escapedFileName}" notes="${escapedNotes}">${escapedCode}</code>`;
+    setMessage((prev) => prev + codeTag);
+  };
+
+  const handleAttachCode = (codeSegment) => {
+    setCurrentEditingCode(codeSegment);
+    setIsCodeModalOpen(true);
+  };
+
+  const handleCodeSave = (updatedCode) => {
+    if (currentEditingCode) {
+      // Update existing code
+      const regex = new RegExp(`<code fileName="${currentEditingCode.fileName}" notes="${currentEditingCode.notes}">[^<]*</code>`);
+      const updatedMessage = message.replace(regex, 
+        `<code fileName="${updatedCode.fileName}" notes="${updatedCode.notes}">${escapeHtml(updatedCode.codeContent)}</code>`
+      );
+      setMessage(updatedMessage);
+    } else {
+      // Add new code
+      addCodeAttachment(updatedCode);
+    }
+    setIsCodeModalOpen(false);
+    setCurrentEditingCode(null);
   };
 
   const updateCodeAttachment = (index, updatedAttachment) => {
@@ -190,37 +211,18 @@ function ChatInterface() {
           />
         )}
         <div className="flex flex-col">
-          {/* Render Code Attachments as Bubbles */}
-          {codeAttachments.length > 0 && (
-            <div className="flex flex-wrap mb-2">
-              {codeAttachments.map((attachment, index) => (
-                <CodeAttachmentBubble
-                  key={index}
-                  attachment={attachment}
-                  onEdit={() => {
-                    setCurrentAttachmentIndex(index);
-                    setIsCodeModalOpen(true);
-                  }}
-                  onDelete={() => deleteCodeAttachment(index)}
-                />
-              ))}
-            </div>
-          )}
-          <div className="flex items-center">
+          <InlineCodeEditor
+            value={message}
+            onChange={setMessage}
+            onAttachCode={handleAttachCode}
+          />
+          <div className="flex items-center mt-2">
             <button
               onClick={() => setIsCodeModalOpen(true)}
               className="mr-2 bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600"
             >
               Attach Code
             </button>
-            <textarea
-              className="flex-1 p-2 border rounded-lg resize-none dark:bg-zinc-800 dark:text-gray-200"
-              rows="2"
-              placeholder="Type your message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
             <button
               className="ml-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
               onClick={handleSend}
@@ -234,18 +236,10 @@ function ChatInterface() {
         <CodeModal
           onClose={() => {
             setIsCodeModalOpen(false);
-            setCurrentAttachmentIndex(null);
+            setCurrentEditingCode(null);
           }}
-          onSave={(attachment) => {
-            if (currentAttachmentIndex !== null) {
-              updateCodeAttachment(currentAttachmentIndex, attachment);
-            } else {
-              addCodeAttachment(attachment);
-            }
-            setIsCodeModalOpen(false);
-            setCurrentAttachmentIndex(null);
-          }}
-          initialData={currentAttachmentIndex !== null ? codeAttachments[currentAttachmentIndex] : null}
+          onSave={handleCodeSave}
+          initialData={currentEditingCode}
         />
       )}
     </div>
