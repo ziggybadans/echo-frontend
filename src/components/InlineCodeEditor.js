@@ -70,7 +70,7 @@ function InlineCodeEditor({ value, onChange, onAttachCode }) {
     <div className="relative border rounded-lg p-2 bg-white dark:bg-[#18181b] text-black dark:text-white">
       <div
         ref={editorRef}
-        className="min-h-[100px] max-h-[300px] overflow-y-auto p-2 focus:outline-none"
+        className="w-full min-h-[100px] max-h-[300px] overflow-y-auto p-2 focus:outline-none break-all"
         contentEditable
         onInput={handleInput}
         onKeyDown={handleKeyDown}

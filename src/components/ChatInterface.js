@@ -216,7 +216,7 @@ function ChatInterface() {
               onKeyDown={handleEditorKeyDown}
             />
           </div>
-          <div className="flex flex-col items-end pl-4">
+          <div className="flex flex-col flex-shrink-0 items-start pl-4 space-y-2">
             <button
               onClick={() => setIsCodeModalOpen(true)}
               className="bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 flex-grow w-full"
