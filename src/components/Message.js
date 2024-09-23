@@ -83,8 +83,8 @@ function Message({ chatId, messageIndex, sender, text }) {
               <CodeAttachmentBubble
                 key={index}
                 attachment={attachment}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
+                onEdit={() => handleEdit(attachment)}
+                onDelete={() => handleDelete(attachment)}
               />
             ))}
           </div>

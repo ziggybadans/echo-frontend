@@ -89,7 +89,7 @@ export const ChatProvider = ({ children }) => {
               ...chat,
               messages: chat.messages.map((msg, idx) =>
                 idx === messageIndex
-                  ? { ...msg, text: String(updatedMessage.text) } // Ensure text is string
+                  ? { ...msg, text: String(updatedMessage.text) }
                   : msg
               ),
             }

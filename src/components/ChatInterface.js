@@ -34,9 +34,15 @@ function ChatInterface() {
   const handleCodeSave = (updatedCode) => {
     if (currentEditingCode) {
       // Update existing code
-      const regex = new RegExp(`<code fileName="${currentEditingCode.fileName}" notes="${currentEditingCode.notes}">[^<]*</code>`);
+      const escapedCode = escapeHtml(updatedCode.codeContent);
+      const escapedFileName = escapeHtml(updatedCode.fileName || "untitled");
+      const escapedNotes = escapeHtml(updatedCode.notes || "");
+
+      // Improved regex to handle multi-line and special characters
+      const regex = new RegExp(`<code\\s+fileName="${currentEditingCode.fileName}"\\s+notes="${currentEditingCode.notes}">([\\s\\S]*?)<\\/code>`);
+      
       const updatedMessage = message.replace(regex, 
-        `<code fileName="${updatedCode.fileName}" notes="${updatedCode.notes}">${escapeHtml(updatedCode.codeContent)}</code>`
+        `<code fileName="${escapedFileName}" notes="${escapedNotes}">${escapedCode}</code>`
       );
       setMessage(updatedMessage);
     } else {
@@ -203,28 +209,30 @@ function ChatInterface() {
         </button>
         {isSystemPromptOpen && (
           <textarea
-            className="w-full p-2 border rounded-lg resize-none dark:bg-gray-800 dark:text-gray-200 mb-2"
+            className="w-full p-2 border rounded-lg resize-none bg-gray-100 dark:bg-gray-800 dark:text-gray-200 mb-2"
             rows="3"
             placeholder="Enter system prompt..."
             value={currentChat.systemPrompt}
             onChange={handleSystemPromptChange}
           />
         )}
-        <div className="flex flex-col">
+        <div className="flex flex-row">
+          <div className="flex-grow">
           <InlineCodeEditor
             value={message}
             onChange={setMessage}
             onAttachCode={handleAttachCode}
           />
-          <div className="flex items-center mt-2">
+          </div>
+          <div className="flex flex-col items-end pl-4">
             <button
               onClick={() => setIsCodeModalOpen(true)}
-              className="mr-2 bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600"
+              className="bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 flex-grow w-full"
             >
               Attach Code
             </button>
             <button
-              className="ml-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex-grow mt-2 w-full"
               onClick={handleSend}
             >
               Send
