@@ -96,7 +96,7 @@ function ModelList() {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 dark:text-white">
       <h2 className="text-xl font-bold mb-4">Available Models</h2>
       
       {Array.isArray(models) && models.length > 0 ? (

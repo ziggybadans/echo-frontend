@@ -8,12 +8,17 @@ import CodeAttachmentBubble from './CodeAttachmentBubble';
 import CodeModal from './CodeModal';
 import { ChatContext } from '../context/ChatContext';
 
-function Message({ chatId, messageIndex, sender, text }) {
+function Message({ chatId, messageIndex, sender, text, model_id }) {
   const [copied, setCopied] = useState(false);
   const { showCode } = useContext(CodeContext);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentAttachment, setCurrentAttachment] = useState(null);
   const { updateMessage } = useContext(ChatContext); // Ensure ChatContext is imported
+  const { models } = useContext(ChatContext);  // Access models from context
+
+  const modelName = model_id 
+    ? models.find((model) => model.id === model_id)?.name || "Unknown Model" 
+    : null;
 
   const handleCopy = () => {
     setCopied(true);
@@ -77,6 +82,12 @@ function Message({ chatId, messageIndex, sender, text }) {
               : 'bg-gray-200 dark:bg-[#282828] text-gray-800 dark:text-gray-200'
           }`}
         >
+          {sender === 'bot' && modelName && (
+            <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+              <strong>Model:</strong> {modelName}
+            </div>
+          )}
+
           <MarkdownRenderer text={cleanedText} />
           <div className="mt-2 flex flex-wrap">
             {codeAttachments.map((attachment, index) => (

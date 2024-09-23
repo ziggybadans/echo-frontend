@@ -66,3 +66,9 @@ code {
 pre div {
   border-radius: 0.5em;
 }
+
+.model-indicator {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem; /* 14px */
+  color: #6b7280; /* Gray-500 */
+}

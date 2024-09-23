@@ -7,13 +7,13 @@ import InlineCodeEditor from "./InlineCodeEditor";
 import { escapeHtml } from "../utils/escapeHtml";
 
 function ChatInterface() {
-  const { 
-    chats, 
-    currentChatId, 
-    addMessage, 
-    updateChat, 
+  const {
+    chats,
+    currentChatId,
+    addMessage,
+    updateChat,
     selectedModelId,
-    models 
+    models,
   } = useContext(ChatContext);
   const currentChat = chats.find((chat) => chat.id === currentChatId);
   const [message, setMessage] = useState("");
@@ -21,13 +21,60 @@ function ChatInterface() {
   const messagesEndRef = useRef(null);
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [currentEditingCode, setCurrentEditingCode] = useState(null);
+  const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false);
+  const [codeAttachments, setCodeAttachments] = useState([]);
+
+  const addCodeAttachment = ({ codeContent, fileName, notes }) => {
+    const escapedCode = escapeHtml(codeContent);
+    const escapedFileName = escapeHtml(fileName || "untitled");
+    const escapedNotes = escapeHtml(notes || "");
+    const codeTag = `<code fileName="${escapedFileName}" notes="${escapedNotes}">${escapedCode}</code>`;
+    setMessage((prev) => prev + codeTag);
+  };
+
+  const handleAttachCode = (codeSegment) => {
+    setCurrentEditingCode(codeSegment);
+    setIsCodeModalOpen(true);
+  };
+
+  const handleCodeSave = (updatedCode) => {
+    if (currentEditingCode) {
+      // Update existing code
+      const escapedCode = escapeHtml(updatedCode.codeContent);
+      const escapedFileName = escapeHtml(updatedCode.fileName || "untitled");
+      const escapedNotes = escapeHtml(updatedCode.notes || "");
+
+      // Improved regex to handle multi-line and special characters
+      const regex = new RegExp(
+        `<code\\s+fileName="${currentEditingCode.fileName}"\\s+notes="${currentEditingCode.notes}">([\\s\\S]*?)<\\/code>`
+      );
+
+      const updatedMessage = message.replace(
+        regex,
+        `<code fileName="${escapedFileName}" notes="${escapedNotes}">${escapedCode}</code>`
+      );
+      setMessage(updatedMessage);
+    } else {
+      // Add new code
+      addCodeAttachment(updatedCode);
+    }
+    setIsCodeModalOpen(false);
+    setCurrentEditingCode(null);
+  };
 
   const handleSend = async () => {
     if (!message.trim() || !currentChatId || !selectedModelId) return;
 
-    const userMessage = { sender: 'user', text: message };
+    // Retrieve the system prompt from the current chat
+    const systemPrompt = currentChat.systemPrompt || "";
+
+    // Combine the system prompt with the user message
+    // Ensure there's a separator (like a newline) for clarity
+    const fullMessage = systemPrompt ? `${systemPrompt}\n${message}` : message;
+
+    const userMessage = { sender: "user", text: message };
     addMessage(currentChatId, userMessage);
-    setMessage('');
+    setMessage("");
     scrollToBottom();
 
     // Set typing indicator
@@ -38,20 +85,27 @@ function ChatInterface() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: message,
+          text: fullMessage,
           model_id: selectedModelId, // Ensure this is correctly set
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to get response from the server.");
+        throw new Error(
+          errorData.detail || "Failed to get response from the server."
+        );
       }
 
       const data = await response.json();
       const responseText = data.response;
+      const responseModelId = data.model_id; // Extract model_id from response
 
-      const botMessage = { sender: "bot", text: responseText };
+      const botMessage = {
+        sender: "bot",
+        text: responseText,
+        model_id: responseModelId, // Include model_id
+      };
       addMessage(currentChatId, botMessage);
       scrollToBottom();
     } catch (error) {
@@ -85,11 +139,20 @@ function ChatInterface() {
     );
   }
 
+  const handleSystemPromptChange = (e) => {
+    const newPrompt = e.target.value;
+    updateChat(currentChatId, { systemPrompt: newPrompt });
+  };
+
+  const toggleSystemPrompt = () => {
+    setIsSystemPromptOpen(!isSystemPromptOpen);
+  };
+
   return (
     <div className="flex flex-col h-screen">
       <div className="flex-1 p-32 pt-8 pb-8 overflow-y-auto bg-[#eeeeee] dark:bg-[#161618]">
         {/* Removed Model Selector Dropdown */}
-        
+
         {/* Chat Messages */}
         {currentChat.messages.map((msg, index) => (
           <Message
@@ -98,6 +161,7 @@ function ChatInterface() {
             messageIndex={index}
             sender={msg.sender}
             text={msg.text}
+            model_id={msg.model_id} // Pass model_id
           />
         ))}
         {isTyping && (
@@ -118,12 +182,27 @@ function ChatInterface() {
         id="message_area"
         className="p-4 border-t dark:border-gray-700 bg-white dark:bg-[#161618]"
       >
+        <button
+          onClick={toggleSystemPrompt}
+          className="mb-2 text-sm text-blue-500 hover:underline focus:outline-none"
+        >
+          {isSystemPromptOpen ? "Hide System Prompt" : "Show System Prompt"}
+        </button>
+        {isSystemPromptOpen && (
+          <textarea
+            className="w-full p-2 border rounded-lg resize-none dark:bg-gray-800 dark:text-gray-200 mb-2"
+            rows="3"
+            placeholder="Enter system prompt..."
+            value={currentChat.systemPrompt}
+            onChange={handleSystemPromptChange}
+          />
+        )}
         <div className="flex flex-row">
           <div className="flex-grow">
             <InlineCodeEditor
               value={message}
               onChange={setMessage}
-              onAttachCode={() => { /* Handle code attachments */ }}
+              onAttachCode={handleAttachCode}
             />
           </div>
           <div className="flex flex-col items-end pl-4">
@@ -148,11 +227,7 @@ function ChatInterface() {
             setIsCodeModalOpen(false);
             setCurrentEditingCode(null);
           }}
-          onSave={(updatedCode) => {
-            // Handle saving code attachments
-            setIsCodeModalOpen(false);
-            setCurrentEditingCode(null);
-          }}
+          onSave={handleCodeSave}
           initialData={currentEditingCode}
         />
       )}
