@@ -117,4 +117,4 @@ function Message({ chatId, messageIndex, sender, text, model_id }) {
   );
 }
 
-export default Message;
+export default React.memo(Message);

@@ -1,0 +1,4 @@
+/* Remove margins from paragraphs inside list items */
+li p {
+    display: inline;
+  }

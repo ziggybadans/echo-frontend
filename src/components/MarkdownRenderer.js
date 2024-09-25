@@ -5,6 +5,7 @@ import { coldarkDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { CodeContext } from '../context/CodeContext';
 import { ExternalLinkIcon, ClipboardCopyIcon } from '@heroicons/react/outline';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+import '../styles/MarkdownRenderer.css'
 
 const MarkdownRenderer = ({ text }) => {
   const { showCode } = useContext(CodeContext);
@@ -73,7 +74,7 @@ const MarkdownRenderer = ({ text }) => {
         h5: ({ node, ...props }) => <h5 style={{ fontSize: '1.25em', marginBottom: '0.5em' }} {...props} />,
         h6: ({ node, ...props }) => <h6 style={{ fontSize: '1.1em', marginBottom: '0.5em' }} {...props} />,
         hr: ({ node, ...props }) => <hr style={{ marginTop: '1.5em', marginBottom: '1em' }} {...props} />,
-        li: ({ node, ...props }) => <li style={{ marginLeft: '0.5em' }} {...props} />,
+        li: ({ node, ...props }) => <li className='p' style={{ marginLeft: '0.5em' }} {...props} />,
       }}
     >
       {text}
